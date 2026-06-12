@@ -1,0 +1,53 @@
+---
+title: "Evalua Javiera: Teacher Rating Platform"
+sidebarTitle: "Introduction"
+description: "Evalua Javiera is a FastAPI web app that lets students evaluate teachers across topic explanation, attitude, and class activity categories."
+---
+
+Evalua Javiera (EVAJ) is a lightweight web application designed to give students a simple, structured way to rate their teachers. Built by Group Two, the platform guides a student through a three-step flow — log in with their document number, pick a teacher, and submit a rating across three pedagogical categories — then presents a certificate acknowledging their participation. The goal is to make teacher feedback effortless and anonymous enough to encourage honest responses, while keeping the technical footprint minimal so the app can be deployed and maintained without a dedicated backend team.
+
+## Tech Stack
+
+Evalua Javiera is built on a deliberately lean set of technologies:
+
+- **FastAPI** — serves all four route endpoints and renders Jinja2 templates server-side.
+- **Jinja2** — handles HTML templating; each page extends a shared `base.html` layout.
+- **Vanilla JavaScript** — manages client-side login validation, teacher selection, rating submission, and navigation via `localStorage`.
+- **CSS** — provides a responsive dark-themed UI across all pages.
+- **Vercel** — the recommended deployment target; zero-config for Python ASGI apps.
+
+No database is required. All transient session data (selected teacher, submitted ratings) is written to and read from the browser's `localStorage`.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Student Login" icon="id-card">
+    Students authenticate with their document number and the shared platform password. Credentials are validated client-side before any navigation occurs.
+  </Card>
+  <Card title="Teacher Selection" icon="chalkboard-teacher">
+    A dedicated selection page lets students choose from the available roster — Lenny, Erika, or Freddy — before proceeding to the rating form.
+  </Card>
+  <Card title="Multi-Category Rating" icon="star">
+    Each teacher is rated across three independent categories: **Topic Explanation** (`explicationsTopics`), **Attitude** (`actitudinal`), and **Class Activities** (`classActivity`), each scored from Malo to Excelente.
+  </Card>
+  <Card title="localStorage Persistence" icon="database">
+    The selected teacher and all three rating values are stored in `localStorage`, meaning no server-side session or database is needed to carry state between pages.
+  </Card>
+  <Card title="Responsive Dark UI" icon="moon">
+    All pages share a dark-themed stylesheet served from `/static/`, designed to display cleanly on both desktop and mobile browsers.
+  </Card>
+  <Card title="Certificate / Thank-You Page" icon="certificate">
+    After submitting ratings, students land on a certificate page (`/Agradecimiento`) acknowledging their participation, with a link back to select another teacher.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="quickstart">
+    Clone the repo, install dependencies, and have Evalua Javiera running locally in under five minutes.
+  </Card>
+  <Card title="User Flow Guide" icon="map" href="guides/user-flow">
+    Walk through every screen — login, teacher selection, rating form, and certificate — with annotated screenshots and route details.
+  </Card>
+</CardGroup>

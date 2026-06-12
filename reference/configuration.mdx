@@ -1,0 +1,130 @@
+---
+title: "Configuration Reference for Evalua Javiera"
+sidebarTitle: "Configuration"
+description: "Reference for all configurable parts of Evalua Javiera — student credentials, teacher list, rating categories, and Vercel deployment settings."
+---
+
+Evalua Javiera has no external database or environment-variable configuration file. All configurable data — student credentials, the teacher roster, and rating categories — lives directly in the source files. This page maps every configurable piece of the application to the exact file and location where it must be changed.
+
+<Warning>
+  All configuration changes are made by editing source files. For local development, changes take effect after restarting the Uvicorn server. For production deployments on Vercel, every change requires a new deployment (`git push` or a manual redeploy from the Vercel dashboard).
+</Warning>
+
+---
+
+## Student Credentials
+
+Student login data is stored in the `users` array at the top of `static/js/index.js`. Authentication is performed entirely client-side — no server-side session or token is issued.
+
+```js
+const users = [
+    { username: "1025657849", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1025657456", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1020113554", password: "MJAVIERA", redirect: "/seleccionatuprofesor" }
+]
+```
+
+Each entry in the array has three fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `username` | `string` | The student's document (ID) number, entered in the "Documento" field. |
+| `password` | `string` | The student's password. Currently all students share the password `MJAVIERA`. |
+| `redirect` | `string` | The URL path the browser navigates to after a successful login. All current users redirect to `/seleccionatuprofesor`. |
+
+To add a new student, append a new object to the `users` array:
+
+```js
+{ username: "1099887766", password: "MJAVIERA", redirect: "/seleccionatuprofesor" }
+```
+
+---
+
+## Teacher List
+
+The list of teachers a student can evaluate is defined in `templates/selectProfesor.html` as `<option>` elements inside the `<select id="maestro">` dropdown. The current options are:
+
+```html
+<select id="maestro" name="maestro">
+    <option value="">Elige a un maestro</option>
+    <option value="Lenny">Lenny</option>
+    <option value="Erika">Erika</option>
+    <option value="Fredy">Freddy</option>
+</select>
+```
+
+The `value` attribute of each `<option>` is the string that gets saved to `localStorage` (as `maestroSeleccionado`) and displayed on the rating page. The visible label text and the `value` should match for clarity.
+
+To add a new teacher, insert a new `<option>` inside the `<select>` block:
+
+```html
+<option value="NuevoProfesor">Nuevo Profesor</option>
+```
+
+---
+
+## Rating Categories
+
+The three rating categories are defined as `<select>` elements in `templates/calification_plataform.html`. Each category maps to a variable name used in `cal_plataform.js` when the results are serialised to `localStorage`.
+
+| Category Label | Element ID | JS Variable |
+|---|---|---|
+| Explicación del tema | `explicationsTopics` | `exp` |
+| Actitudinal | `actitudinal` | `act` |
+| Actividades de clase | `classActivity` | `cls` |
+
+All three selects share the same four rating options: `Malo`, `Regular`, `Bien`, `Excelente`.
+
+To add a new rating category, add a `<label>` / `<select>` pair inside `<form id="calification">` in `calification_plataform.html`:
+
+```html
+<label for="punctuality">Puntualidad</label>
+<select id="punctuality">
+    <option value="">Nota</option>
+    <option value="Malo">Malo</option>
+    <option value="Regular">Regular</option>
+    <option value="Bien">Bien</option>
+    <option value="Excelente">Excelente</option>
+</select>
+```
+
+Then update `cal_plataform.js` to read the new element and include it in the `localStorage` payload:
+
+```js
+const pun = document.getElementById('punctuality').value;
+
+if (exp && act && cls && pun) {
+    localStorage.setItem('calification', JSON.stringify({ exp, act, cls, pun }));
+    window.location.href = '/Agradecimiento';
+}
+```
+
+---
+
+## Static File Path
+
+The static directory is mounted in `main.py` using FastAPI's `StaticFiles`:
+
+```python
+app.mount("/static", StaticFiles(directory="static"), name="static")
+```
+
+| Parameter | Value | Description |
+|---|---|---|
+| Mount path | `/static` | The URL prefix under which all static files are publicly accessible. |
+| `directory` | `"static"` | The local directory path (relative to `main.py`) that is served. |
+| `name` | `"static"` | The mount name used by Jinja2's `url_for('static', path=...)` helper. |
+
+To change the static directory, update both the `directory` argument and all `url_for` calls in your templates.
+
+---
+
+## Templates Directory
+
+The Jinja2 template engine is pointed at the `templates/` directory in `main.py`:
+
+```python
+templates = Jinja2Templates(directory="templates")
+```
+
+The `directory` argument is a path relative to `main.py`. If you rename or move the templates folder, update this value accordingly. All `templates.TemplateResponse(name=...)` calls reference filenames relative to this directory.

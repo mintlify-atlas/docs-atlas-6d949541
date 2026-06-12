@@ -1,47 +1,125 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Evalua Javiera"
+sidebarTitle: "Quickstart"
+description: "Learn how to clone, install dependencies, and run Evalua Javiera locally in under five minutes using FastAPI and uvicorn."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+By the end of this guide you will have a fully working local instance of Evalua Javiera running at `http://localhost:8000`. You will be able to log in as a student, select a teacher, submit a rating, and view the certificate page — all without touching a database or configuring any external services.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+<Note>
+  Ratings are stored entirely in your browser's `localStorage`. No database, no server-side session, and no environment variables are required to run the app.
+</Note>
 
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+## Setup
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Prerequisites">
+    Make sure you have the following installed before continuing:
+
+    - **Python 3.8 or later** — verify with `python --version`
+    - **pip** — bundled with Python 3.8+; verify with `pip --version`
 
     ```bash
-    npm install your-package
+    python --version
+    # Python 3.11.x (or any 3.8+)
+
+    pip --version
+    # pip 23.x ...
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Clone the repository">
+    Clone the project from GitHub and change into the project directory:
 
     ```bash
-    your-cli init
+    git clone https://github.com/groupTwoisTheBest/evaJav.git && cd evaJav
     ```
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Install dependencies">
+    The application has two Python dependencies — `fastapi` and `jinja2`. Install them from the included `requirements.txt`:
 
     ```bash
-    your-cli start
+    pip install -r requirements.txt
     ```
+
+    `requirements.txt` contents for reference:
+
+    ```text
+    fastapi
+    jinja2
+    ```
+
+    <Tip>
+      Working inside a virtual environment is recommended to keep your global Python environment clean:
+
+      ```bash
+      python -m venv .venv
+      source .venv/bin/activate   # Windows: .venv\Scripts\activate
+      pip install -r requirements.txt
+      ```
+    </Tip>
+  </Step>
+
+  <Step title="Start the development server">
+    Launch the FastAPI application with `uvicorn`. The `--reload` flag automatically restarts the server whenever you save a source file — ideal during development:
+
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+    You should see output similar to:
+
+    ```
+    INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+    INFO:     Started reloader process [...] using WatchFiles
+    INFO:     Started server process [...]
+    INFO:     Waiting for application startup.
+    INFO:     Application startup complete.
+    ```
+
+    <Tip>
+      The `--reload` flag watches your project directory for file changes. Remove it when deploying to production or when running performance-sensitive tests.
+    </Tip>
+  </Step>
+
+  <Step title="Open the app in your browser">
+    Navigate to the app's root URL:
+
+    ```
+    http://localhost:8000
+    ```
+
+    You will be greeted by the EVAJ login form, which asks for a **Document number** (username) and a **Password**.
+  </Step>
+
+  <Step title="Log in as a student">
+    Three student accounts are pre-configured in `static/js/index.js`. Use any of the following document numbers with the shared password `MJAVIERA`:
+
+    | Document Number | Password  |
+    |-----------------|-----------|
+    | `1025657849`    | `MJAVIERA` |
+    | `1025657456`    | `MJAVIERA` |
+    | `1020113554`    | `MJAVIERA` |
+
+    For example, to log in with the first account:
+
+    ```
+    Document:  1025657849
+    Password:  MJAVIERA
+    ```
+
+    After a successful login you will be redirected to `/seleccionatuprofesor` — the teacher selection page.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## What's Next
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+<CardGroup cols={2}>
+  <Card title="User Flow Guide" icon="map" href="guides/user-flow">
+    Explore every screen in detail — teacher selection at `/seleccionatuprofesor`, the rating form at `/calificaElProfesor`, and the certificate page at `/Agradecimiento`.
+  </Card>
+  <Card title="Routes Reference" icon="code" href="reference/routes">
+    See all four FastAPI route definitions, their response classes, templates, and the JavaScript bundle each page loads.
+  </Card>
+</CardGroup>

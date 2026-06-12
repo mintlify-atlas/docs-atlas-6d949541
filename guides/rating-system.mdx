@@ -1,0 +1,79 @@
+---
+title: "Teacher Rating System and Categories"
+sidebarTitle: "Rating System"
+description: "Learn how Evalua Javiera collects and stores teacher ratings across three evaluation categories using browser localStorage."
+---
+
+Evalua Javiera's rating system lets students assess a teacher across three distinct pedagogical dimensions using a four-point qualitative scale. After selecting a teacher on the previous screen, the student arrives at `/calificaElProfesor`, where a single form collects one rating per category. All three ratings must be filled before the form can be submitted. Once submitted, the combined rating object is persisted to browser localStorage and the student is forwarded to the confirmation certificate.
+
+## Rating Categories
+
+The rating form in `templates/calification_plataform.html` defines three evaluation categories. Each is rendered as an HTML `<select>` element:
+
+| Category | Label in UI | Element `id` |
+|---|---|---|
+| Topic explanation | Explicación del tema | `explicationsTopics` |
+| Attitude | Actitudinal | `actitudinal` |
+| Class activities | Actividades de clase | `classActivity` |
+
+### Four-Point Scale
+
+Every category offers the same four options in ascending order of quality:
+
+| Value | Meaning |
+|---|---|
+| `Malo` | Poor |
+| `Regular` | Average |
+| `Bien` | Good |
+| `Excelente` | Excellent |
+
+The default placeholder option has an empty string value (`""`), which the validation check uses to detect that the student has not yet made a selection.
+
+## Teacher Name Display
+
+Before the student sees the rating form, `static/js/cal_plataform.js` reads the teacher name that was saved during the previous step and injects it into the page:
+
+```javascript
+const maestroSeleccionado = localStorage.getItem('maestroSeleccionado');
+document.getElementById('Selectormestro').textContent = `Evaluando a: ${maestroSeleccionado}`;
+```
+
+The `<legend id="Selectormestro">` element inside the form is updated so the student always has a clear on-screen reminder of which teacher they are currently evaluating.
+
+## Saving Ratings to localStorage
+
+When the student clicks **Enviar**, the `submit` event listener on the `calification` form in `static/js/cal_plataform.js` runs the following logic:
+
+```javascript
+const exp = document.getElementById('explicationsTopics').value;
+const act = document.getElementById('actitudinal').value;
+const cls = document.getElementById('classActivity').value;
+if (exp && act && cls) {
+    localStorage.setItem('calification', JSON.stringify({ exp, act, cls }));
+    window.location.href = '/Agradecimiento';
+}
+```
+
+All three values are read from the DOM. If every value is non-empty (i.e., the student selected a rating for all three categories), the script:
+
+1. Serialises the three ratings into a JSON string.
+2. Writes the string to localStorage under the key `calification`.
+3. Navigates the browser to `/Agradecimiento` (the confirmation certificate page).
+
+If any dropdown is still on the blank default, `alert('Por favor, selecciona una nota para cada casilla.')` fires and no data is saved.
+
+<Note>
+  All ratings are stored as a single JSON object in localStorage under the key `calification`. The object has the shape `{ exp, act, cls }`, where each property holds the string value chosen by the student (e.g., `"Bien"`, `"Excelente"`). Because localStorage is scoped to the browser origin, ratings are not transmitted to or persisted on the server.
+</Note>
+
+## Extending the Teacher List
+
+<Tip>
+  To add or remove teachers from the dropdown, edit the `<select id="maestro">` element inside `templates/selectProfesor.html`. Each teacher needs one `<option>` whose `value` attribute is the name that will be stored in localStorage and displayed on the rating screen. For example, to add a teacher named **Carlos**:
+
+  ```html
+  <option value="Carlos">Carlos</option>
+  ```
+
+  No changes to Python, JavaScript, or any other file are required — the teacher name flows automatically from the dropdown through localStorage into the rating page's `<legend>`.
+</Tip>

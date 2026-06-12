@@ -1,0 +1,204 @@
+---
+title: "Jinja2 Templates Reference"
+sidebarTitle: "Templates"
+description: "Reference for the five Jinja2 HTML templates in Evalua Javiera — base layout, login, teacher selection, rating form, and confirmation."
+---
+
+Evalua Javiera uses [Jinja2](https://jinja.palletsprojects.com/) as its server-side template engine, configured in `main.py` via `Jinja2Templates(directory="templates")`. All page templates follow the **template inheritance** pattern: a single `base.html` defines the full HTML document skeleton and exposes three named blocks — `title`, `stylesheets`, and `content` — which child templates override to inject their own markup. The per-page JavaScript file is loaded globally through the `linkJs` context variable that each route passes from `main.py`.
+
+## Template Overview
+
+| Template | Route | Purpose | JS File |
+|---|---|---|---|
+| `base.html` | — | Base layout with blocks | — |
+| `index.html` | `/` | Login form | `index.js` |
+| `selectProfesor.html` | `/seleccionatuprofesor` | Teacher dropdown | `sele_prof.js` |
+| `calification_plataform.html` | `/calificaElProfesor` | Rating form | `cal_plataform.js` |
+| `certificado.html` | `/Agradecimiento` | Confirmation | `index.js` |
+
+## `base.html` — The Base Layout
+
+`base.html` is the root template from which every page template inherits. It renders the complete `<!DOCTYPE html>` wrapper and declares three overridable blocks:
+
+- **`{% block title %}`** — Sets the browser tab title. Defaults to `EvaJav` when not overridden.
+- **`{% block stylesheets %}`** — Loads the page's CSS. The default loads `style.css` via FastAPI's `url_for` helper. Child templates can override this block to swap in a different stylesheet (for example, `index.html` loads `index.css` instead).
+- **`{% block content %}`** — The main body area. This block is empty in `base.html`; every child template is expected to override it with the page's HTML markup.
+
+```html
+<!DOCTYPE html>
+<html lang="es" defer>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+{% endblock %}
+    <script src="{{ linkJs.src }}" defer></script>
+    <link rel="icon" href="{{ url_for('static', path='favicon.png') }}" type="image/x-icon">
+    <title> {% block title %} EvaJav {% endblock %}</title>
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+</body>
+</html>
+```
+
+## `index.html` — Login Form
+
+Extends `base.html`. Overrides `{% block title %}` with `Evalua Javiera` and `{% block stylesheets %}` to load `index.css` instead of the global stylesheet. The `{% block content %}` block renders a `<form>` with `onsubmit="login(event)"`, two inputs (`#username` and `#password`), and a submit button.
+
+```html
+{% extends "base.html" %}
+{% block title %}Evalua Javiera{% endblock %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', path='index.css') }}">
+{% endblock %}
+{% block content %}
+
+    <form onsubmit="login(event)">
+        <legend>EVAJ</legend>
+
+            <label for="username">Usuario</label>
+            <input id="username" type="text" placeholder="Documento">
+            <label for="password">Contraseña</label>
+            <input id="password" type="password" placeholder="Contraseña">
+            <button onclick="login()">Ingresar</button>
+
+    </form>
+
+{% endblock %}
+```
+
+## `selectProfesor.html` — Teacher Selection
+
+Extends `base.html`. Overrides `{% block title %}` with `¿A quién vas a evaluar?` and `{% block content %}` with a form (`id="Selectormestro"`) containing a `<select id="maestro">` dropdown listing the available teachers. The `sele_prof.js` script listens for form submission.
+
+```html
+{% extends "base.html" %}
+{% block title %}¿A quién vas a evaluar?{% endblock %}
+
+{% block content %}
+
+    <form id="Selectormestro">
+        <legend>
+            David Gomez Arteaga
+        </legend>
+
+        <label for="maestro" >¿A quién quieres evaluar?</label>
+            <select id="maestro" name="maestro">
+                <option value="">Elige a un maestro</option>
+                <option value="Lenny">Lenny</option>
+                <option value="Erika">Erika</option>
+                <option value="Fredy">Freddy</option>
+            </select>
+
+        <button type="submit" >seguir</button>
+
+{% endblock %}
+```
+
+## `calification_plataform.html` — Rating Form
+
+Extends `base.html`. Overrides `{% block title %}` with `¿A quién quieres evaluar?` and `{% block content %}` with a form (`id="calification"`) containing three rating `<select>` elements, each offering the options `Malo`, `Regular`, `Bien`, and `Excelente`. An empty `<legend id="Selectormestro">` is populated at runtime by `cal_plataform.js` with the teacher's name from `localStorage`.
+
+```html
+{% extends "base.html" %}
+{% block title %} ¿A quién quieres evaluar? {% endblock %}
+
+{% block content %}
+
+    <form id="calification">
+
+        <legend id="Selectormestro"></legend>
+        <label for="explicationsTopics">Explicación del tema</label>
+
+            <select id="explicationsTopics">
+                <option value="">Nota</option>
+                <option value="Malo">Malo</option>
+                <option value="Regular">Regular</option>
+                <option value="Bien" >Bien</option>
+                <option value="Excelente">Excelente</option>
+            </select>
+
+        <label class="track" for="actitudinal">Actitudinal </label>
+
+            <select id="actitudinal">
+                <option value="">Nota</option>
+                <option value="Malo">Malo</option>
+                <option value="Regular">Regular</option>
+                <option value="Bien">Bien</option>
+                <option value="Excelente">Excelente</option>
+            </select>
+
+        <label for="classActivity" class="track">
+        Actividades de clase
+        </label>
+
+            <select id="classActivity">
+                <option value="">Nota</option>
+                <option value="Malo">Malo</option>
+                <option value="Regular">Regular</option>
+                <option value="Bien">Bien</option>
+                <option value="Excelente">Excelente</option>
+            </select>
+
+    <button type="submit">Enviar</button>
+
+    </form>
+
+{% endblock %}
+```
+
+## `certificado.html` — Confirmation / Certificate
+
+Extends `base.html`. Overrides `{% block title %}` with `certificado` and `{% block content %}` with a confirmation message inside a `<form>`. Displays an `<h2>` heading ("Certificado de Evaluación"), a thank-you message, and an anchor-wrapped `<input type="button" value="Regresar">` that links back to `/seleccionatuprofesor`.
+
+```html
+{% extends "base.html" %}
+{% block title %}certificado{% endblock %}
+
+{% block content %}
+
+    <form>
+            <p>
+            <h2>Certificado de Evaluación</h2>Gracias por evaluar a tu profesor, puedes regresar a la página anterior.</strong>
+            </p>
+        <a href="/seleccionatuprofesor">
+        <input type="button" value="Regresar">
+        </a>
+    </form>
+
+{% endblock %}
+```
+
+## The `linkJs` Context Variable
+
+Every route in `main.py` passes a `linkJs` dictionary to its template through the `context` argument:
+
+```python
+LinkJS = [
+    {"src": "/static/js/index.js"},
+    {"src": "/static/js/sele_prof.js"},
+    {"src": "/static/js/cal_plataform.js"},
+]
+
+# Example — login route
+return templates.TemplateResponse(
+    request=request,
+    name="index.html",
+    context={"linkJs": LinkJS[0]}
+)
+```
+
+Inside `base.html`, the value is consumed as:
+
+```html
+<script src="{{ linkJs.src }}" defer></script>
+```
+
+This means `base.html` never hard-codes a script path — the correct JS module is selected by whichever route renders the template, keeping the base layout completely generic.
+
+<Tip>
+  To add a new page to Evalua Javiera: create a new template file in `templates/` that begins with `{% extends "base.html" %}`, override `{% block content %}` with your page markup, add a new entry to the `LinkJS` list in `main.py`, and register a new `@app.get(...)` route that passes the correct `linkJs` entry in its `context` dictionary. No changes to `base.html` are required.
+</Tip>

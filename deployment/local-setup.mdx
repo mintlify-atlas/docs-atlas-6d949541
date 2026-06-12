@@ -1,0 +1,98 @@
+---
+title: "Run Evalua Javiera Locally for Development"
+sidebarTitle: "Local Setup"
+description: "Set up and run Evalua Javiera on your local machine using Python, FastAPI, and uvicorn for development and testing."
+---
+
+Running Evalua Javiera locally gives you a fast feedback loop for developing new features, fixing bugs, and testing the full teacher-rating flow before pushing changes to production. The application is a standard FastAPI + Jinja2 project, so the setup requires nothing beyond Python and a couple of lightweight packages — you'll have a live server at `http://localhost:8000` in just a few minutes.
+
+## Prerequisites
+
+Before you begin, make sure the following tools are available on your machine:
+
+- **Python 3.8 or later** — check with `python --version` or `python3 --version`
+- **pip** — bundled with Python 3.4+; verify with `pip --version`
+- **Git** — needed to clone the repository
+
+## Setup
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the project from GitHub and move into the project directory:
+
+    ```bash
+    git clone https://github.com/groupTwoisTheBest/evaJav.git && cd evaJav
+    ```
+  </Step>
+
+  <Step title="(Optional) Create a virtual environment">
+    Isolating dependencies in a virtual environment keeps your global Python installation clean and avoids version conflicts between projects.
+
+    **macOS / Linux:**
+    ```bash
+    python -m venv venv && source venv/bin/activate
+    ```
+
+    **Windows (Command Prompt):**
+    ```bat
+    python -m venv venv && venv\Scripts\activate
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install the packages listed in `requirements.txt`:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    `requirements.txt` declares two runtime packages — `fastapi` (the web framework) and `jinja2` (the HTML templating engine). You also need **uvicorn**, the ASGI server that runs the app; install it separately:
+
+    ```bash
+    pip install uvicorn
+    ```
+  </Step>
+
+  <Step title="Start the development server">
+    Launch the app with uvicorn, pointing it at the `app` object inside `main.py`:
+
+    ```bash
+    uvicorn main:app --reload
+    ```
+
+    <Tip>
+      The `--reload` flag tells uvicorn to watch your source files and automatically restart the server whenever you save a change. Always use it during development — remove it only for production-like local testing.
+    </Tip>
+  </Step>
+
+  <Step title="Open the app in your browser">
+    Navigate to [http://localhost:8000](http://localhost:8000). You should see the Evalua Javiera login page, and from there you can walk through the full student-to-rating flow.
+  </Step>
+</Steps>
+
+## Project Structure
+
+The repository is laid out as follows:
+
+```text
+evaJav/
+├── main.py                  # FastAPI application entry point
+├── requirements.txt         # Python dependencies
+├── vercel.json              # Vercel deployment config
+├── static/
+│   ├── favicon.png
+│   ├── style.css            # Global styles
+│   ├── index.css            # Login page styles
+│   └── js/
+│       ├── index.js         # Login logic
+│       ├── sele_prof.js     # Teacher selection logic
+│       └── cal_plataform.js # Rating submission logic
+└── templates/
+    ├── base.html            # Base template
+    ├── index.html           # Login page
+    ├── selectProfesor.html  # Teacher selection page
+    ├── calification_plataform.html  # Rating form
+    └── certificado.html     # Confirmation page
+```
+
+`main.py` mounts the `static/` directory at the `/static` URL prefix via FastAPI's `StaticFiles` and configures Jinja2 to resolve templates from the `templates/` directory — so both folders must be present for the app to start correctly.

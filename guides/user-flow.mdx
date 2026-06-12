@@ -1,0 +1,63 @@
+---
+title: "Student Evaluation Flow in Evalua Javiera"
+sidebarTitle: "User Flow"
+description: "Walk through every step a student takes in Evalua Javiera — from login to teacher selection, rating submission, and the confirmation certificate."
+---
+
+Evalua Javiera guides students through a four-screen journey: they authenticate with a document number and shared password, choose which teacher to evaluate, submit ratings across three pedagogical categories, and receive a confirmation certificate. The entire flow is orchestrated by a FastAPI backend that serves Jinja2 templates, while client-side JavaScript in the browser handles validation, state passing, and navigation between pages.
+
+<Note>
+  All inter-page state — the selected teacher and the submitted ratings — is stored in browser **localStorage**, not in a backend database. Clearing localStorage between sessions resets any in-progress evaluation.
+</Note>
+
+<Steps>
+  <Step title="Login — /"> 
+    The application opens at `/`, which serves `templates/index.html`. The student is presented with a simple login form that asks for two fields:
+
+    | Field | HTML `id` | Placeholder |
+    |---|---|---|
+    | Document number | `username` | `Documento` |
+    | Password | `password` | `Contraseña` |
+
+    The form's `onsubmit` attribute calls `login(event)`, defined in `static/js/index.js`. That function reads both field values, searches the hardcoded `users` array for a matching credential pair, and — if a match is found — redirects the browser to `/seleccionatuprofesor`. If no match is found, `alert("Usuario o contraseña incorrectos.")` is shown and the student stays on the login page. There is no server round-trip for credential validation; all checking happens entirely in the browser.
+  </Step>
+
+  <Step title="Select Teacher — /seleccionatuprofesor">
+    After a successful login the student lands on `/seleccionatuprofesor`, which serves `templates/selectProfesor.html`. A `<select>` dropdown (id `maestro`) inside the form `Selectormestro` lists the three available teachers:
+
+    - **Lenny**
+    - **Erika**
+    - **Freddy**
+
+    The JavaScript file `static/js/sele_prof.js` listens for the form's `submit` event. When the student picks a teacher and clicks **Seguir**, the script:
+
+    1. Calls `event.preventDefault()` to suppress a full page reload.
+    2. Reads `document.getElementById('maestro').value`.
+    3. Persists the name with `localStorage.setItem('maestroSeleccionado', maestro)`.
+    4. Navigates to `/calificaElProfesor`.
+
+    If the student submits without selecting a teacher, `alert('Por favor, selecciona un maestro')` is displayed.
+  </Step>
+
+  <Step title="Rate Teacher — /calificaElProfesor">
+    The rating screen is served at `/calificaElProfesor` from `templates/calification_plataform.html`. At page load, `static/js/cal_plataform.js` reads `localStorage.getItem('maestroSeleccionado')` and injects the text *"Evaluando a: [teacher name]"* into the `<legend id="Selectormestro">` element so the student always knows whose evaluation they are completing.
+
+    The form (id `calification`) contains three `<select>` dropdowns, each offering the options **Malo**, **Regular**, **Bien**, and **Excelente**:
+
+    | Category label | Element `id` |
+    |---|---|
+    | Explicación del tema | `explicationsTopics` |
+    | Actitudinal | `actitudinal` |
+    | Actividades de clase | `classActivity` |
+
+    On submit, `cal_plataform.js` reads all three values. If all three are filled, it saves them to localStorage as a JSON object under the key `calification` and redirects to `/Agradecimiento`. If any dropdown is left on the default blank option, an alert prompts the student to complete every field.
+  </Step>
+
+  <Step title="Confirmation Certificate — /Agradecimiento">
+    The final screen, served at `/Agradecimiento` from `templates/certificado.html`, displays a **Certificado de Evaluación** message thanking the student for completing the evaluation:
+
+    > *"Gracias por evaluar a tu profesor, puedes regresar a la página anterior."*
+
+    A **Regresar** button links back to `/seleccionatuprofesor`, allowing the student to begin a new evaluation for a different teacher without returning to the login screen. The certificate page has no additional JavaScript logic — it is a static confirmation view.
+  </Step>
+</Steps>

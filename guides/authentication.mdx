@@ -1,0 +1,59 @@
+---
+title: "Authentication in Evalua Javiera"
+sidebarTitle: "Authentication"
+description: "Understand how Evalua Javiera handles student login using client-side credential validation with document numbers and a shared password."
+---
+
+Evalua Javiera uses a purely client-side authentication model. There is no server-side session, no JWT token, no cookie, and no database query involved in the login process. Instead, a static list of permitted credentials is bundled directly into `static/js/index.js` and the entire credential check happens inside the student's browser when the login form is submitted.
+
+## Credential Store
+
+All valid users are defined in a JavaScript array at the top of `static/js/index.js`. Each entry contains a `username` (a Colombian-format document number), a `password`, and a `redirect` path that the browser should navigate to on successful login:
+
+```javascript
+const users = [
+    { username: "1025657849", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1025657456", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1020113554", password: "MJAVIERA", redirect: "/seleccionatuprofesor" }
+]
+```
+
+All three students share the same password (`MJAVIERA`) and are redirected to the same next page (`/seleccionatuprofesor`) upon login. Adding or removing students means editing this array directly in the source file.
+
+## Login Function
+
+When the student submits the login form, the `onsubmit` handler on the `<form>` element in `templates/index.html` calls `login(event)`. The complete function from `static/js/index.js` is:
+
+```javascript
+function login(event) {
+    event.preventDefault();
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+
+    const found = users.find(u => u.username === user && u.password === pass);
+
+    if (found) {
+        window.location.href = found.redirect;
+    } 
+    else {
+        alert("Usuario o contraseña incorrectos.");
+    }
+}
+```
+
+`event.preventDefault()` stops the form from triggering a full browser reload. The function then reads the values of the `username` and `password` input fields and uses `Array.prototype.find` to look for a matching entry in the `users` array. If a match is found, the browser is sent to `found.redirect` (which is always `/seleccionatuprofesor` in the current configuration). If no match is found, `alert()` displays an error message in Spanish.
+
+## Login Flow Summary
+
+1. Student opens `/` — the FastAPI route renders `templates/index.html`, which loads `static/js/index.js`.
+2. Student types their document number into the **Usuario** field (`id="username"`) and their password into the **Contraseña** field (`id="password"`).
+3. Student clicks **Ingresar** — the form's `onsubmit` fires `login(event)`.
+4. `login()` searches the in-memory `users` array for a matching `{ username, password }` pair.
+5. **Match found** → `window.location.href = "/seleccionatuprofesor"` navigates to the teacher-selection screen.
+6. **No match** → `alert("Usuario o contraseña incorrectos.")` is shown; the student remains on the login page.
+
+<Warning>
+  **Storing credentials in client-side JavaScript is not suitable for production.** Because `static/js/index.js` is served as a public static asset, any person who opens browser DevTools or views page source can read every username and password in the `users` array without logging in at all.
+
+  For any real deployment, move authentication to the server: validate credentials against a hashed-password store (e.g., a database with `bcrypt`-hashed passwords), issue a server-side session cookie or signed JWT on success, and protect downstream routes with a FastAPI dependency that checks the session. Never ship plaintext passwords in JavaScript.
+</Warning>

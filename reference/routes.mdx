@@ -1,0 +1,113 @@
+---
+title: "HTTP Routes — Evalua Javiera API Reference"
+sidebarTitle: "Routes"
+description: "Complete reference for all four HTTP GET routes served by the Evalua Javiera FastAPI application, including templates and JavaScript context."
+---
+
+This page documents every HTTP route defined in `main.py`. Evalua Javiera exposes four `GET` endpoints, each of which renders a Jinja2 HTML template and injects a per-route JavaScript file through the `linkJs` context variable. All routes return an `HTMLResponse` and are handled by `async` functions powered by FastAPI.
+
+<Accordion title="GET / — Login Page">
+  **Handler:** `read_root`
+
+  **Template:** `index.html`
+
+  **JS context:** `/static/js/index.js`
+
+  This is the application's entry point. It renders the login form where a student enters their document number (username) and password. On submission, the client-side `login(event)` function in `index.js` validates the credentials against the hard-coded `users` array and, on success, redirects to `/seleccionatuprofesor`.
+
+  ```python
+  @app.get("/", response_class=HTMLResponse)
+  async def read_root(request: Request):
+      return templates.TemplateResponse(request=request, name="index.html", context={"linkJs": LinkJS[0]})
+  ```
+</Accordion>
+
+<Accordion title="GET /seleccionatuprofesor — Teacher Selection">
+  **Handler:** `read_seleccionatuprofesor`
+
+  **Template:** `selectProfesor.html`
+
+  **JS context:** `/static/js/sele_prof.js`
+
+  Renders a form containing a `<select>` dropdown (`id="maestro"`) that lists available teachers — Lenny, Erika, and Freddy. When the student submits the form, `sele_prof.js` saves the chosen teacher's name to `localStorage` and redirects to `/calificaElProfesor`.
+
+  ```python
+  @app.get("/seleccionatuprofesor", response_class=HTMLResponse)
+  async def read_seleccionatuprofesor(request: Request,):
+      return templates.TemplateResponse(request=request, name="selectProfesor.html", context={"linkJs": LinkJS[1]})
+  ```
+</Accordion>
+
+<Accordion title="GET /calificaElProfesor — Rating Form">
+  **Handler:** `read_calificaElProfesor`
+
+  **Template:** `calification_plataform.html`
+
+  **JS context:** `/static/js/cal_plataform.js`
+
+  Displays the rating form for the teacher previously selected. It reads the teacher's name from `localStorage` and displays it in the form legend. Three dropdown selects allow the student to rate the teacher across three categories: topic explanation (`explicationsTopics`), attitude (`actitudinal`), and class activities (`classActivity`). On submission, `cal_plataform.js` serialises the ratings to `localStorage` and redirects to `/Agradecimiento`.
+
+  ```python
+  @app.get("/calificaElProfesor", response_class=HTMLResponse)
+  async def read_calificaElProfesor(request: Request):
+      return templates.TemplateResponse(request=request, name="calification_plataform.html", context={"linkJs": LinkJS[2]})
+  ```
+</Accordion>
+
+<Accordion title="GET /Agradecimiento — Confirmation / Certificate">
+  **Handler:** `read_agradecimiento`
+
+  **Template:** `certificado.html`
+
+  **JS context:** `/static/js/index.js`
+
+  Renders the thank-you confirmation page shown after a student submits their ratings. It displays a "Certificado de Evaluación" heading, a brief thank-you message, and a **Regresar** button that links back to `/seleccionatuprofesor` so another student can begin a new evaluation session.
+
+  ```python
+  @app.get("/Agradecimiento", response_class=HTMLResponse)
+  async def read_agradecimiento(request: Request):
+      return templates.TemplateResponse(request=request, name="certificado.html", context={"linkJs": LinkJS[0]})
+  ```
+</Accordion>
+
+## Full Route Definitions
+
+The complete route block from `main.py`, including the `LinkJS` lookup list and the static-file mount:
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+LinkJS = [
+    {"src": "/static/js/index.js"},
+    {"src": "/static/js/sele_prof.js"},
+    {"src": "/static/js/cal_plataform.js"},
+]
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html", context={"linkJs": LinkJS[0]})
+
+@app.get("/seleccionatuprofesor", response_class=HTMLResponse)
+async def read_seleccionatuprofesor(request: Request,):
+    return templates.TemplateResponse(request=request, name="selectProfesor.html", context={"linkJs": LinkJS[1]})
+
+@app.get("/calificaElProfesor", response_class=HTMLResponse)
+async def read_calificaElProfesor(request: Request):
+    return templates.TemplateResponse(request=request, name="calification_plataform.html", context={"linkJs": LinkJS[2]})
+
+@app.get("/Agradecimiento", response_class=HTMLResponse)
+async def read_agradecimiento(request: Request):
+    return templates.TemplateResponse(request=request, name="certificado.html", context={"linkJs": LinkJS[0]})
+```
+
+<Note>
+  All four routes use `response_class=HTMLResponse`, meaning FastAPI returns a fully-rendered HTML document rather than JSON. Every handler is declared `async`, allowing the Uvicorn/ASGI server to handle requests concurrently without blocking the event loop.
+</Note>

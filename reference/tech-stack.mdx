@@ -1,0 +1,93 @@
+---
+title: "Evalua Javiera Tech Stack and Dependencies"
+sidebarTitle: "Tech Stack"
+description: "Overview of every technology used in Evalua Javiera — FastAPI, Jinja2, vanilla JS, CSS, and the Vercel Python runtime."
+---
+
+Evalua Javiera is a deliberately lightweight, zero-database web application. The backend is a Python FastAPI application that serves server-rendered HTML via Jinja2 templates. All interactive logic — authentication, teacher selection, and rating submission — runs in the browser using plain vanilla JavaScript, with `localStorage` acting as the sole persistence layer between page navigations. The application is deployed to Vercel using the official `@vercel/python` runtime with no build step required.
+
+<CardGroup cols={2}>
+  <Card title="FastAPI" icon="server">
+    Python web framework powering all four backend routes. FastAPI handles HTTP `GET` requests, renders Jinja2 templates through `TemplateResponse`, mounts the `static/` directory, and returns `HTMLResponse` objects. Every route handler is declared `async` for non-blocking request handling.
+  </Card>
+  <Card title="Jinja2" icon="file-code">
+    Server-side template engine used to render HTML pages. Templates follow an inheritance model: `base.html` defines the document skeleton and three overridable blocks (`title`, `stylesheets`, `content`). Child templates extend `base.html` and fill in only what they need, keeping markup DRY.
+  </Card>
+  <Card title="Vanilla JavaScript" icon="js">
+    All client-side interactivity is handled with plain JavaScript — no frameworks or build tools. Three modules cover the three interactive steps: `index.js` (login), `sele_prof.js` (teacher selection), and `cal_plataform.js` (rating submission). Each module is loaded per-page via the `linkJs` context variable.
+  </Card>
+  <Card title="CSS" icon="palette">
+    A single global stylesheet (`style.css`) provides the dark-themed, mobile-first responsive design. Key design tokens (`--fondo: #222222`, `--texto: #f2f2f2`, `--border: 3px solid #3B4B6A`) are defined as CSS custom properties. The login page loads an additional `index.css` for page-specific styles.
+  </Card>
+  <Card title="Vercel" icon="cloud">
+    Cloud hosting platform. Evalua Javiera is deployed using the `@vercel/python` runtime, configured in `vercel.json`. All incoming requests are routed to `main.py` via a catch-all route rule. No separate server process or Dockerfile is required.
+  </Card>
+  <Card title="localStorage" icon="database">
+    The browser's built-in `localStorage` API serves as the sole state store between page navigations. The selected teacher's name is stored under the key `maestroSeleccionado`, and the submitted ratings are stored as a JSON string under the key `calification`. No data is sent to or persisted on the server.
+  </Card>
+</CardGroup>
+
+---
+
+## Python Dependencies
+
+All Python dependencies are listed in `requirements.txt`:
+
+```text
+fastapi
+jinja2
+```
+
+These two packages are the only server-side dependencies. Vercel installs them automatically during deployment using the `@vercel/python` runtime.
+
+For **local development**, you also need an ASGI server to run the application. Uvicorn is the standard choice for FastAPI, but it is not listed in `requirements.txt` because Vercel does not require it. Install it separately:
+
+```bash
+pip install uvicorn
+uvicorn main:app --reload
+```
+
+---
+
+## Vercel Deployment Configuration
+
+The `vercel.json` file at the project root configures the Vercel build and routing:
+
+```json
+{
+  "builds": [
+    {
+      "src": "main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
+    }
+  ]
+}
+```
+
+| Key | Value | Description |
+|---|---|---|
+| `builds[].src` | `"main.py"` | The entry-point file Vercel compiles with the Python runtime. |
+| `builds[].use` | `"@vercel/python"` | The Vercel runtime builder for Python WSGI/ASGI applications. |
+| `routes[].src` | `"/(.*)"` | A catch-all regex that matches every incoming URL path. |
+| `routes[].dest` | `"main.py"` | Routes all matched requests to the FastAPI application in `main.py`. |
+
+---
+
+## Runtime Versions
+
+| Requirement | Version |
+|---|---|
+| Python | 3.8 or later |
+| FastAPI | Latest (pinned by `requirements.txt`) |
+| Jinja2 | Latest (pinned by `requirements.txt`) |
+| Uvicorn | Latest (local dev only, not in `requirements.txt`) |
+
+<Note>
+  Evalua Javiera uses **no database** of any kind. Student credentials live in `static/js/index.js`, teacher names live in `templates/selectProfesor.html`, and all runtime state (selected teacher, submitted ratings) is stored exclusively in the browser's `localStorage`. This means ratings are not persisted beyond the browser session and are not accessible server-side.
+</Note>

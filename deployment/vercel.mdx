@@ -1,0 +1,79 @@
+---
+title: "Deploy Evalua Javiera to Vercel"
+sidebarTitle: "Vercel"
+description: "Deploy Evalua Javiera to Vercel using the @vercel/python runtime. Covers vercel.json configuration and the one-command deploy workflow."
+---
+
+Evalua Javiera ships with a ready-to-use `vercel.json` that lets you push the entire FastAPI application to Vercel with a single command. Vercel's `@vercel/python` runtime handles the ASGI server layer for you, so there is no need to configure uvicorn manually — you get a globally distributed, HTTPS-enabled URL the moment the build completes.
+
+## `vercel.json` Configuration
+
+The `vercel.json` at the repository root tells Vercel exactly how to build and route the application:
+
+```json
+{
+  "builds": [
+    {
+      "src": "main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
+    }
+  ]
+}
+```
+
+| Field | Purpose |
+|---|---|
+| `builds` | Instructs Vercel to compile `main.py` using the `@vercel/python` runtime, which packages the FastAPI app and its dependencies into a serverless function. |
+| `routes` | A catch-all rule (`/(.*)`) that forwards every incoming HTTP request — regardless of path — to the FastAPI app defined in `main.py`, letting FastAPI's own router decide how to respond. |
+
+## Deploy Steps
+
+<Steps>
+  <Step title="Install the Vercel CLI">
+    The Vercel CLI is distributed as an npm package. Install it globally so the `vercel` command is available anywhere on your system:
+
+    ```bash
+    npm install -g vercel
+    ```
+  </Step>
+
+  <Step title="Log in to your Vercel account">
+    Authenticate the CLI with your Vercel account. This opens a browser window to complete the OAuth flow:
+
+    ```bash
+    vercel login
+    ```
+  </Step>
+
+  <Step title="Deploy from the project root">
+    From inside the `evaJav/` directory, run:
+
+    ```bash
+    vercel
+    ```
+
+    The CLI will prompt you to link the project to a Vercel team/account on the first run. Accept the defaults or configure the project name as needed.
+  </Step>
+
+  <Step title="Vercel builds and publishes the app">
+    Vercel automatically detects `vercel.json`, runs the `@vercel/python` build for `main.py`, and deploys the result to its edge network. Once the build finishes, the CLI prints a preview URL where you can verify the deployment before promoting it to production.
+  </Step>
+</Steps>
+
+<Note>
+  The production deployment of Evalua Javiera is live at **[https://evajav.vercel.app](https://evajav.vercel.app)**. After your first deploy, subsequent production releases can be pushed with:
+
+  ```bash
+  vercel --prod
+  ```
+</Note>
+
+<Warning>
+  Static assets (CSS, JavaScript, images) are served by FastAPI's `StaticFiles` mount at the `/static` prefix — they are **not** handled separately by Vercel's CDN. This means the entire `static/` directory must be included in every deployment. Double-check your `.gitignore` (and any `.vercelignore` you add later) to confirm that `static/` is **not** excluded; omitting it will cause the app to load without styles or client-side scripts.
+</Warning>

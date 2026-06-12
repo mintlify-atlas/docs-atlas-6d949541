@@ -1,28 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Evalua Javiera",
+  "projectType": "saas",
+  "projectName": "Evalua Javiera",
+  "projectDescription": "A web application built with FastAPI and Jinja2 that allows students to log in and rate their teachers across multiple performance categories.",
   "theme": "almond",
-  "colors": {
-    "primary": "#8f2a4a",
-    "light": "#e185a5",
-    "dark": "#8f2a4a"
-  },
-  "favicon": "https://icons.duckduckgo.com/ip3/evajav.vercel.app.ico",
-  "logo": {
-    "light": "https://media.brand.dev/9cc4e0fc-7d45-4126-b318-089d98b1130c.png",
-    "dark": "https://media.brand.dev/9cc4e0fc-7d45-4126-b318-089d98b1130c.png"
-  },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/groupTwoisTheBest/evaJav"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/groupTwoisTheBest/evaJav"
-    }
-  },
+  "primaryColor": "#8f2a4a",
+  "lightColor": "#e185a5",
+  "darkColor": null,
   "navigation": {
     "tabs": [
       {
@@ -73,5 +56,20 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Student login with document number and password",
+    "Teacher selection from a predefined list",
+    "Multi-category teacher rating (topic explanation, attitude, class activities)",
+    "Ratings persisted in browser localStorage",
+    "Thank-you/certificate confirmation page after submission",
+    "Responsive dark-themed UI",
+    "Deployed on Vercel via @vercel/python"
+  ],
+  "publicApiSurface": [
+    "GET / — Login page",
+    "GET /seleccionatuprofesor — Teacher selection page",
+    "GET /calificaElProfesor — Rating form page",
+    "GET /Agradecimiento — Confirmation/certificate page"
+  ]
 }

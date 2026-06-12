@@ -1,0 +1,195 @@
+---
+title: "Static Assets and JavaScript Modules"
+sidebarTitle: "Static Assets"
+description: "Reference for the CSS stylesheets and JavaScript modules in Evalua Javiera's static/ directory, including their responsibilities and key functions."
+---
+
+All static files in Evalua Javiera — stylesheets, JavaScript modules, and images — are served from the `static/` directory at the root of the project. FastAPI exposes the entire directory under the `/static` URL prefix using its built-in `StaticFiles` integration, meaning every file inside `static/` is reachable at a predictable public path with no additional configuration required.
+
+## Static Mount
+
+The mount is declared near the top of `main.py`, immediately after the `FastAPI()` instance is created:
+
+```python
+app.mount("/static", StaticFiles(directory="static"), name="static")
+```
+
+The `name="static"` parameter registers the mount with FastAPI's URL-reversal system, enabling Jinja2 templates to reference static files through the `url_for` helper:
+
+```html
+<link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+```
+
+---
+
+## CSS Files
+
+### `static/style.css`
+
+`style.css` is the global stylesheet loaded by `base.html` as the default for every page (unless a child template overrides the `{% block stylesheets %}` block). It defines CSS custom properties (variables) at the `:root` level and applies consistent dark-themed styles across all elements.
+
+Key design tokens:
+
+| Variable | Value | Usage |
+|---|---|---|
+| `--fondo` | `#222222` | Dark background colour applied to every element |
+| `--texto` | `#f2f2f2` | Light off-white text colour |
+| `--border` | `3px solid #3B4B6A` | Deep-blue solid border on inputs |
+| `--BorderShadow` | `0 0 7px rgb(75, 131, 177)` | Blue glow box-shadow on inputs |
+
+Notable rules:
+- The `*` universal selector sets `background`, `color`, `font-family` (sans-serif), and uses **flexbox column layout** (`display: flex; flex-direction: column; align-items: center; justify-content: center`) on every element.
+- `form` elements take up `90vw × 90vh` by default, with a white `1px solid #fff` border.
+- `button` elements use a blue background (`#385288`) and are `40vw` wide on mobile, narrowing to `20vw` on viewports wider than 800 px.
+- A `@media (min-width: 800px)` breakpoint applies desktop overrides: wider inputs, smaller legend font size (`3vw`), reduced form dimensions, and removes link underlines.
+
+```css
+:root{
+    --fondo: #222222;
+    --texto: #f2f2f2;
+    --border: 3px solid #3B4B6A;
+    --BorderShadow: 0 0 7px rgb(75, 131, 177);
+}
+
+* {
+    color: var(--texto);
+    background: var(--fondo);
+    font-family: Arial;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0;
+    border-radius: 3em;
+    font-family: sans-serif;
+}
+
+input {
+    margin: 10px;
+    border: var(--border);
+    box-shadow: var(--BorderShadow);
+}
+
+button {
+    width: 40vw;
+    height: 7vh;
+    margin: 10px;
+    background-color:#385288;
+}
+```
+
+### `static/index.css`
+
+`index.css` is the login-page-specific stylesheet. It is loaded by `index.html`, which overrides the `{% block stylesheets %}` block in `base.html` to replace `style.css` with this file:
+
+```html
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', path='index.css') }}">
+{% endblock %}
+```
+
+This allows the login page to have its own distinct visual presentation without affecting other pages.
+
+---
+
+## JavaScript Modules
+
+Each page in Evalua Javiera loads exactly one JavaScript file, injected by `base.html` through the `{{ linkJs.src }}` expression. The three modules cover the three interactive steps of the evaluation flow.
+
+### `static/js/index.js`
+
+Handles client-side authentication on the login page (`/`). It also serves as the script for the confirmation page (`/Agradecimiento`), which requires no interactive logic of its own.
+
+**Responsibilities:**
+- Defines the `users` array containing all authorised student credentials.
+- Implements the `login(event)` function, called by the form's `onsubmit` handler.
+- On successful match, redirects the browser to the user's `redirect` path.
+- On failure, displays an `alert` with an error message.
+
+```js
+const users = [
+    { username: "1025657849", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1025657456", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
+    { username: "1020113554", password: "MJAVIERA", redirect: "/seleccionatuprofesor" }
+]
+
+function login(event) {
+    event.preventDefault();
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+
+    const found = users.find(u => u.username === user && u.password === pass);
+
+    if (found) {
+        window.location.href = found.redirect;
+    } else {
+        alert("Usuario o contraseña incorrectos.");
+    }
+}
+```
+
+### `static/js/sele_prof.js`
+
+Handles teacher selection on the `/seleccionatuprofesor` page.
+
+**Responsibilities:**
+- Attaches a `submit` event listener to the form with `id="Selectormestro"`.
+- Reads the value of the `<select id="maestro">` dropdown.
+- If a teacher is selected, persists the choice to `localStorage` via `localStorage.setItem('maestroSeleccionado', maestro)` and navigates to `/calificaElProfesor`.
+- If no teacher is selected, shows an alert prompting the student to make a choice.
+
+```js
+document.getElementById('Selectormestro').addEventListener('submit', function(event) {
+    // Prevent default form submission / page reload
+    event.preventDefault();
+
+    // Read the selected teacher from the dropdown
+    const maestro = document.getElementById('maestro').value;
+
+    if (maestro) {
+        // Persist the chosen teacher for the next page
+        localStorage.setItem('maestroSeleccionado', maestro);
+
+        // Navigate to the rating form
+        window.location.href = '/calificaElProfesor';
+    } else {
+        alert('Por favor, selecciona un maestro');
+    }
+});
+```
+
+### `static/js/cal_plataform.js`
+
+Handles the rating submission on the `/calificaElProfesor` page.
+
+**Responsibilities:**
+- Reads `maestroSeleccionado` from `localStorage` and populates the `<legend id="Selectormestro">` element with `Evaluando a: [teacher name]` so the student knows who they are rating.
+- Attaches a `submit` event listener to the form with `id="calification"`.
+- Reads the three dropdown values: `exp` (`#explicationsTopics`), `act` (`#actitudinal`), `cls` (`#classActivity`).
+- If all three are filled, serialises them as JSON and saves them to `localStorage` via `localStorage.setItem('calification', JSON.stringify({ exp, act, cls }))`, then redirects to `/Agradecimiento`.
+- If any dropdown is empty, shows an alert asking the student to complete all fields.
+
+```js
+// Retrieve and display the previously selected teacher
+const maestroSeleccionado = localStorage.getItem('maestroSeleccionado');
+document.getElementById('Selectormestro').textContent = `Evaluando a: ${maestroSeleccionado}`;
+
+document.getElementById('calification').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    // Read rating values from the three dropdowns
+    const exp = document.getElementById('explicationsTopics').value;
+    const act = document.getElementById('actitudinal').value;
+    const cls = document.getElementById('classActivity').value;
+
+    if (exp && act && cls) {
+        // Persist ratings as a JSON string for later retrieval
+        localStorage.setItem('calification', JSON.stringify({ exp, act, cls }));
+
+        // Navigate to the confirmation page
+        window.location.href = '/Agradecimiento';
+    } else {
+        alert('Por favor, selecciona una nota para cada casilla.');
+    }
+});
+```
