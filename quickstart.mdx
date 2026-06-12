@@ -37,10 +37,11 @@ By the end of this guide you will have a fully working local instance of Evalua 
   </Step>
 
   <Step title="Install dependencies">
-    The application has two Python dependencies — `fastapi` and `jinja2`. Install them from the included `requirements.txt`:
+    The application requires `fastapi` and `jinja2`, listed in `requirements.txt`, plus `uvicorn` to serve the app. Install all three:
 
     ```bash
     pip install -r requirements.txt
+    pip install uvicorn
     ```
 
     `requirements.txt` contents for reference:
@@ -57,6 +58,7 @@ By the end of this guide you will have a fully working local instance of Evalua 
       python -m venv .venv
       source .venv/bin/activate   # Windows: .venv\Scripts\activate
       pip install -r requirements.txt
+      pip install uvicorn
       ```
     </Tip>
   </Step>
@@ -70,7 +72,7 @@ By the end of this guide you will have a fully working local instance of Evalua 
 
     You should see output similar to:
 
-    ```
+    ```text
     INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
     INFO:     Started reloader process [...] using WatchFiles
     INFO:     Started server process [...]
@@ -86,7 +88,7 @@ By the end of this guide you will have a fully working local instance of Evalua 
   <Step title="Open the app in your browser">
     Navigate to the app's root URL:
 
-    ```
+    ```text
     http://localhost:8000
     ```
 
@@ -104,7 +106,7 @@ By the end of this guide you will have a fully working local instance of Evalua 
 
     For example, to log in with the first account:
 
-    ```
+    ```text
     Document:  1025657849
     Password:  MJAVIERA
     ```

@@ -1,7 +1,7 @@
 ---
-title: "Authentication in Evalua Javiera"
+title: "Student Login and Credential Validation — Evalua Javiera"
 sidebarTitle: "Authentication"
-description: "Understand how Evalua Javiera handles student login using client-side credential validation with document numbers and a shared password."
+description: "Understand how Evalua Javiera handles student login using client-side credential validation with hardcoded document numbers and a shared password."
 ---
 
 Evalua Javiera uses a purely client-side authentication model. There is no server-side session, no JWT token, no cookie, and no database query involved in the login process. Instead, a static list of permitted credentials is bundled directly into `static/js/index.js` and the entire credential check happens inside the student's browser when the login form is submitted.

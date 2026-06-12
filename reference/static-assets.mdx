@@ -1,5 +1,5 @@
 ---
-title: "Static Assets and JavaScript Modules"
+title: "Static Assets — CSS and JavaScript in Evalua Javiera"
 sidebarTitle: "Static Assets"
 description: "Reference for the CSS stylesheets and JavaScript modules in Evalua Javiera's static/ directory, including their responsibilities and key functions."
 ---
@@ -39,7 +39,7 @@ Key design tokens:
 
 Notable rules:
 - The `*` universal selector sets `background`, `color`, `font-family` (sans-serif), and uses **flexbox column layout** (`display: flex; flex-direction: column; align-items: center; justify-content: center`) on every element.
-- `form` elements take up `90vw × 90vh` by default, with a white `1px solid #fff` border.
+- `form` elements have a white `1px solid #fff` border. Two `form` rules exist in the file: the first sets `width: 90vw`, `height: 90vh`, and `gap: 10px`; the second rule (at the bottom of the file) overrides those dimensions to `width: 40vw` and `height: 50vh`, and adds `gap: 8px` and the white border, so the effective rendered size is `40vw × 50vh`.
 - `button` elements use a blue background (`#385288`) and are `40vw` wide on mobile, narrowing to `20vw` on viewports wider than 800 px.
 - A `@media (min-width: 800px)` breakpoint applies desktop overrides: wider inputs, smaller legend font size (`3vw`), reduced form dimensions, and removes link underlines.
 
@@ -106,7 +106,7 @@ Handles client-side authentication on the login page (`/`). It also serves as th
 - On successful match, redirects the browser to the user's `redirect` path.
 - On failure, displays an `alert` with an error message.
 
-```js
+```javascript
 const users = [
     { username: "1025657849", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
     { username: "1025657456", password: "MJAVIERA", redirect: "/seleccionatuprofesor" },
@@ -138,7 +138,7 @@ Handles teacher selection on the `/seleccionatuprofesor` page.
 - If a teacher is selected, persists the choice to `localStorage` via `localStorage.setItem('maestroSeleccionado', maestro)` and navigates to `/calificaElProfesor`.
 - If no teacher is selected, shows an alert prompting the student to make a choice.
 
-```js
+```javascript
 document.getElementById('Selectormestro').addEventListener('submit', function(event) {
     // Prevent default form submission / page reload
     event.preventDefault();
@@ -169,7 +169,7 @@ Handles the rating submission on the `/calificaElProfesor` page.
 - If all three are filled, serialises them as JSON and saves them to `localStorage` via `localStorage.setItem('calification', JSON.stringify({ exp, act, cls }))`, then redirects to `/Agradecimiento`.
 - If any dropdown is empty, shows an alert asking the student to complete all fields.
 
-```js
+```javascript
 // Retrieve and display the previously selected teacher
 const maestroSeleccionado = localStorage.getItem('maestroSeleccionado');
 document.getElementById('Selectormestro').textContent = `Evaluando a: ${maestroSeleccionado}`;
